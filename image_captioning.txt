@@ -1,0 +1,62 @@
+import tensorflow as tf
+from tensorflow.keras import layers, models
+from tensorflow.keras.preprocessing import image
+from tensorflow.keras.applications.inception_v3 import InceptionV3
+from tensorflow.keras.applications.inception_v3 import preprocess_input
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.layers import Input, Dense, LSTM, Embedding, Dropout
+
+# Download the InceptionV3 model (include_top=False to remove the fully connected layer at the top)
+base_model = InceptionV3(weights='imagenet', include_top=False)
+
+# Create a model that extracts features from images
+image_model = models.Model(inputs=base_model.input, outputs=base_model.layers[-1].output)
+
+# Preprocess the image and get features
+def preprocess_image(img_path):
+    img = image.load_img(img_path, target_size=(299, 299))
+    img_array = image.img_to_array(img)
+    img_array = tf.expand_dims(img_array, 0)
+    img_array = preprocess_input(img_array)
+    return img_array
+
+# Get image features
+def get_image_features(img_path):
+    img_array = preprocess_image(img_path)
+    features = image_model.predict(img_array)
+    return features
+
+# Load the tokenizer for text processing
+tokenizer = tf.keras.preprocessing.text.Tokenizer(num_words=5000, oov_token="<OOV>")
+# Note: You may need to fit the tokenizer on your own dataset
+
+# Create the captioning model
+embedding_dim = 256
+units = 512
+vocab_size = 5001  # Including the <OOV> token
+max_length = 49  # Maximum length of the captions
+
+# Encoder
+image_input = Input(shape=(2048,))
+image_dense = Dense(embedding_dim, activation='relu')(image_input)
+
+# Decoder
+caption_input = Input(shape=(max_length,))
+caption_embedding = Embedding(vocab_size, embedding_dim, input_length=max_length)(caption_input)
+caption_lstm = LSTM(units, return_sequences=True)(caption_embedding)
+caption_lstm = Dropout(0.5)(caption_lstm)
+caption_lstm = LSTM(units, return_sequences=False)(caption_lstm)
+caption_lstm = Dropout(0.5)(caption_lstm)
+
+# Merge the image and caption features
+merged = tf.keras.layers.concatenate([image_dense, caption_lstm])
+output = Dense(vocab_size, activation='softmax')(merged)
+
+model = models.Model(inputs=[image_input, caption_input], outputs=output)
+
+# Compile the model
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+# Print the model summary
+model.summary()
