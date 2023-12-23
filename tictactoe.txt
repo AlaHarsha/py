@@ -1,0 +1,67 @@
+import random
+
+def create_board():
+    return [' '] * 9
+
+def print_board(board):
+    for i in range(3):
+        print("|", board[i*3], board[i*3+1], board[i*3+2], "|")
+
+def player_move(board):
+    while True:
+        try:
+            move = int(input("Enter your move (1-9): ")) - 1
+            if 0 <= move < 9 and board[move] == ' ':
+                board[move] = 'X'
+                break
+            else:
+                print("Invalid move. Please try again.")
+        except ValueError:
+            print("Invalid input. Please enter a number.")
+
+def ai_move(board):
+    # Simple random move for the AI
+    empty_spaces = [i for i in range(9) if board[i] == ' ']
+    if empty_spaces:
+        move = random.choice(empty_spaces)
+        board[move] = 'O'
+
+def check_winner(board, player):
+    # Check for winning patterns for the given player
+    for i in range(3):
+        # Check rows and columns
+        if all(board[i*3 + j] == player for j in range(3)) or all(board[i + j*3] == player for j in range(3)):
+            return True
+    # Check diagonals
+    if all(board[i] == player for i in [0, 4, 8]) or all(board[i] == player for i in [2, 4, 6]):
+        return True
+    return False
+
+def check_tie(board):
+    # Check if the board is full
+    return ' ' not in board
+
+def play_game():
+    board = create_board()
+    current_player = 'X'
+
+    while True:
+        print_board(board)
+
+        if current_player == 'X':
+            player_move(board)
+        else:
+            ai_move(board)
+
+        if check_winner(board, current_player):
+            print(f"{current_player} wins!")
+            break
+
+        if check_tie(board):
+            print("It's a tie!")
+            break
+
+        current_player = 'O' if current_player == 'X' else 'X'
+
+# Now you can use the play_game function
+play_game()
