@@ -1,0 +1,37 @@
+import random
+
+def get_greeting():
+    return "Hello! How can I help you today?"
+
+def get_response(message):
+    message = message.lower()
+
+    if "hello" in message or "hi" in message:
+        return "Hi there! How can I assist you?"
+
+    elif "how are you" in message:
+        return "I'm just a computer program, but thanks for asking!"
+
+    elif "bye" in message or "goodbye" in message:
+        return "Goodbye! Have a great day."
+
+    elif "thanks" in message or "thank you" in message:
+        return "You're welcome! If you have more questions, feel free to ask."
+
+    else:
+        return "I'm sorry, I didn't understand that. Can you please rephrase or ask another question?"
+
+def chat():
+    print(get_greeting())
+
+    while True:
+        user_input = input("You: ")
+        if user_input.lower() == 'exit':
+            print("Goodbye!")
+            break
+
+        response = get_response(user_input)
+        print("Bot:", response)
+
+if __name__ == "__main__":
+    chat()
